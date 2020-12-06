@@ -197,7 +197,8 @@ class MovieData:
             if not all(True if col in self.movie_data_df.columns else False for col in grouping):
                 raise ValueError(f'The grouping values passed are not in the data table header:\n'
                                  f'{set(self.movie_data_df.columns).symmetric_difference(set(grouping))}')
-            return self.movie_data_df.groupby(grouping).describe().round()
+            # This does not work as intended for the sub-level data on genres and actors
+            return self.movie_data_df.groupby(grouping).describe().round().stack()
         else:
             # The "50%" Level is equivalent to the median; the mean is equal to the average
             return self.movie_data_df.describe().round()
@@ -315,5 +316,10 @@ if __name__ == '__main__':
     print(md.read_from_database(get_all_movie_data_query, data_base=db))
 
     print(md.read_from_database(get_all_genre_data_query, data_base=db))
+
+    md.calculate_statistics(grouping=['country', 'title_year']).to_csv('Country_Year_Stats.csv')
+    md.calculate_statistics().to_csv('Basic_Stats.csv')
+    md.calculate_statistics(grouping=['director_name']).to_csv('Director_Level_Stats.csv')
+    md.calculate_statistics(grouping='title_year').to_csv('Year_level.csv')
 
     print('Done')
